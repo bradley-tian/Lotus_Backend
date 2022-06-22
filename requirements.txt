@@ -1,0 +1,8 @@
+flask
+flask_sqlalchemy>=2.*
+sqlalchemy
+pandas
+numpy
+yfinance
+ta
+flask_migrate
