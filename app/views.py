@@ -89,13 +89,3 @@ def macdModel():
         "triggers": str(triggers),
     }
     return response
-
-# args: fast, slow, signal, interval, period = None, start_date = None, end_date = None
-
-# Import python ta lib
-# Get quote data from yahoo
-# Transform input backtrack to date range
-# pandas splice price history
-# get macd values from ta lib using split series
-# transform data into time, price tuple array
-# return as dictionary
