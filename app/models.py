@@ -5,7 +5,7 @@ from app import db
 class Quotes(db.Model):
     __tablename__ = 'Quotes'
     id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
+    username = Column(String)
     ticker = Column(String)
 
     def __init__(self, data):

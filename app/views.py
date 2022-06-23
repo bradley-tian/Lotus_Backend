@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, render_template, request, redirect, url_for
+from flask import jsonify, render_template, request
 from app import app, db
 from app.models import Quotes
+from app.algorithms import calculate_returns
 import json
 import yfinance as yf
 import pandas as pd
@@ -40,23 +41,65 @@ def quote():
 
     return jsonify(success = True)
 
-"""Calculates MACD signal line values."""
+"""Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
 @app.route('/macdModel', methods = ['GET','POST'])
 def macdModel(): 
-
     # Need to change this hardcoded username later
     quote = yf.Ticker(Quotes.query.filter_by(username="admin").first().ticker)
     # Need to implement error checking for periods and intervals
     history = []
     data = json.loads(request.get_data(as_text = True))
+    
+    # Valid periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+    # Valid intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
+    time_hierarchy = {
+        "1m":1,
+        "2m":2,
+        "5m":3,
+        "15m":4,
+        "30m":5,
+        "60m":6,
+        "90m":7,
+        "1h":8,
+        "1d":9,
+        "5d":10,
+        "1wk":11,
+        "1mo":12,
+        "3mo":13,
+        "6mo":14,
+        "1y":15,
+        "ytd":16,
+        "2y":17,
+        "5y":18,
+        "10y":19,
+        "max":20,
+    }
+
     period = data["period"]
     if period:
         interval = data["interval"]
+
+        if not time_hierarchy[period] or not time_hierarchy[interval]:
+            print("Error: invalid period or interval parameters (out of bounds).")
+            return jsonify(success = False)
+        elif time_hierarchy[period] < time_hierarchy[interval]:
+            print("Error: interval is set larger than total period.")
+            return jsonify(success = False)
+        elif time_hierarchy[period] == 11:
+            print("Error: invalid period parameter.")
+            return jsonify(success = False)
+        elif time_hierarchy[interval] > 13:
+            print("Error: invalid interval paramter.")
+            return jsonify(success = False)
+
         history = quote.history(period = period, interval = interval, actions = False)
     else: 
         start_date = data['start_date']
         end_date = data['end_date']
-        history = quote.history(start_date = start_date, end_date = end_date, actions = False)
+        try:
+            history = quote.history(start_date = start_date, end_date = end_date, actions = False)
+        except:
+            print("Error: invalid start date or end date format.")
     
     closings = history['Close']
     macd = ta.trend.MACD(
@@ -76,16 +119,25 @@ def macdModel():
     for date, value in hist.items():
         if last_value:
             if value > 0 and last_value < 0:
-                triggers[last_date] = [last_value, "buy"]
+                triggers[last_date] = [closings[last_date], "buy"]
             elif value < 0 and last_value > 0:
-                triggers[last_date] = [last_value, "sell"]
+                triggers[last_date] = [closings[last_date], "sell"]
         last_date = date
         last_value = value
     
+    net_returns = calculate_returns(
+        triggers = triggers,
+        shares = int(data['shares']),
+        starting_price = int(data['starting_price']),
+        cash = int(data['cash']),
+        )
+
     response = {
         "macd_line": str(line.to_dict()),
         "macd_hist": str(hist.to_dict()),
         "macd_signal": str(signal.to_dict()),
         "triggers": str(triggers),
+        "returns": str(net_returns),
     }
     return response
+
