@@ -19,7 +19,7 @@ def initialize_database():
     db.create_all(app=app)
 
 """Generates historical price data of the given stock."""
-@app.route('/quote', methods = ['POST'])
+@app.route('/quote', methods = ['GET','POST'])
 def quote():
     if request.method == 'POST':
         data = request.get_data(as_text = True)
@@ -113,6 +113,8 @@ def macdModel():
     hist = macd.macd_diff()
     signal = macd.macd_signal()
     triggers = {}
+
+    # Change timestamps to epoch times
 
     last_date = None
     last_value = None
