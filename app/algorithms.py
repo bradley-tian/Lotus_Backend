@@ -7,34 +7,37 @@ def calculate_returns(triggers, shares, starting_price, cash):
     original_value = shares * starting_price + cash
 
     # DEBUG
-    print(original_value)
+    print("starting shares: ", shares)
 
-    post_equity = original_value
+    post_equity = shares * starting_price
     last_price = starting_price
 
     # Pseudo model for calculating how many shares to buy/sell. Other methods?
-    def percent_model(last_price, curr_price, shares):
-        multiplier = float((curr_price - last_price) / last_price)
+    def percent_model(last_price, curr_price, shares, aggression = 1.00):
+        multiplier = float((curr_price - last_price) / last_price) * 10 * aggression
+        # print(shares * multiplier)
         return int(shares * multiplier)
 
     for date, action in triggers.items():
         curr_price = action[0]
+        print(action[0], ', ', action[1])
         shares_to_trade = percent_model(last_price, curr_price, shares)
         if action[1] == 'buy':
             if (shares_to_trade * curr_price > cash):
                 shares_to_trade = cash / curr_price
             shares += shares_to_trade
-            post_equity += shares_to_trade * curr_price
+            post_equity = shares * curr_price
             cash -= shares_to_trade * curr_price
             last_price = curr_price
         elif action[1] == 'sell':
             if (shares_to_trade > shares):
                 shares_to_trade = shares
             shares -= shares_to_trade
-            post_equity -= shares_to_trade * curr_price
+            post_equity = shares * curr_price
             cash += shares_to_trade * curr_price
             last_price = curr_price
 
     # DEBUG
     print(post_equity + cash)
-    return (post_equity + cash) - original_value
+
+    return round((post_equity + cash) - original_value, 2)

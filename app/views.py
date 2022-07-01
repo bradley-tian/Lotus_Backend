@@ -1,3 +1,4 @@
+import dataclasses
 from flask import jsonify, render_template, request
 from app import app, db
 from app.models import Quotes
@@ -32,75 +33,49 @@ def quote():
             return jsonify(success = False)
         
         # Need to change this hardcoded username later
-        entry = Quotes({
-            'username': 'admin',
-            'ticker': ticker,
-        })
-        db.session.add(entry)
+        entry = Quotes.query.filter_by(username = 'admin').first() 
+        if not entry:
+            entry = Quotes({
+                'username': 'admin',
+                'ticker': ticker,
+            })
+            db.session.add(entry)
+        else:
+            entry.ticker = ticker
         db.session.commit()
 
     return jsonify(success = True)
 
+# Valid periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
+# Valid intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
+time_hierarchy = {
+    "1m":1,
+    "2m":2,
+    "5m":3,
+    "15m":4,
+    "30m":5,
+    "60m":6,
+    "90m":7,
+    "1h":8,
+    "1d":9,
+    "5d":10,
+    "1wk":11,
+    "1mo":12,
+    "3mo":13,
+    "6mo":14,
+    "1y":15,
+    "ytd":16,
+    "2y":17,
+    "5y":18,
+    "10y":19,
+    "max":20,
+}
+
 """Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
 @app.route('/macdModel', methods = ['GET','POST'])
 def macdModel(): 
-    # Need to change this hardcoded username later
-    quote = yf.Ticker(Quotes.query.filter_by(username="admin").first().ticker)
-    # Need to implement error checking for periods and intervals
-    history = []
     data = json.loads(request.get_data(as_text = True))
-    
-    # Valid periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
-    # Valid intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
-    time_hierarchy = {
-        "1m":1,
-        "2m":2,
-        "5m":3,
-        "15m":4,
-        "30m":5,
-        "60m":6,
-        "90m":7,
-        "1h":8,
-        "1d":9,
-        "5d":10,
-        "1wk":11,
-        "1mo":12,
-        "3mo":13,
-        "6mo":14,
-        "1y":15,
-        "ytd":16,
-        "2y":17,
-        "5y":18,
-        "10y":19,
-        "max":20,
-    }
-
-    period = data["period"]
-    if period:
-        interval = data["interval"]
-
-        if not time_hierarchy[period] or not time_hierarchy[interval]:
-            print("Error: invalid period or interval parameters (out of bounds).")
-            return jsonify(success = False)
-        elif time_hierarchy[period] < time_hierarchy[interval]:
-            print("Error: interval is set larger than total period.")
-            return jsonify(success = False)
-        elif time_hierarchy[period] == 11:
-            print("Error: invalid period parameter.")
-            return jsonify(success = False)
-        elif time_hierarchy[interval] > 13:
-            print("Error: invalid interval paramter.")
-            return jsonify(success = False)
-
-        history = quote.history(period = period, interval = interval, actions = False)
-    else: 
-        start_date = data['start_date']
-        end_date = data['end_date']
-        try:
-            history = quote.history(start_date = start_date, end_date = end_date, actions = False)
-        except:
-            print("Error: invalid start date or end date format.")
-    
+    history = get_history(data)
     closings = history['Close']
     macd = ta.trend.MACD(
         close = closings,
@@ -115,7 +90,6 @@ def macdModel():
     triggers = {}
 
     # Change timestamps to epoch times
-
     last_date = None
     last_value = None
     for date, value in hist.items():
@@ -143,3 +117,73 @@ def macdModel():
     }
     return response
 
+@app.route('/rsiModel', methods = ['GET', 'POST'])
+def rsiModel():
+    data = json.loads(request.get_data(as_text = True))
+    history = get_history(data)
+    closings = history['Close']
+    rsi = ta.momentum.RSIIndicator(
+        close = closings,
+        window = int(data['window']),
+        fillna = True
+    ).rsi()
+
+    triggers = {}
+    last_value = None
+
+    # Change timestamps to epoch times
+    for date, value in rsi.items():
+        if last_value:
+            # Make customizable
+            if last_value < 30 and value > 30:
+                triggers[date] = [closings[date], 'buy']
+            elif last_value < 70 and value > 70:
+                triggers[date] = [closings[date], 'sell']
+        last_value = value
+
+    net_returns = calculate_returns(
+        triggers = triggers,
+        shares = int(data['shares']),
+        starting_price = int(data['starting_price']),
+        cash = int(data['cash']),
+    )
+
+    response = {
+        "rsi": str(rsi.to_dict()),
+        "triggers": str(triggers),
+        "returns": str(net_returns),
+    }
+    
+    return response
+
+def get_history(data):
+    # Need to change this hardcoded username later
+    quote = yf.Ticker(Quotes.query.filter_by(username="admin").first().ticker)
+    history = []
+    period = data["period"]
+
+    if period:
+        interval = data["interval"]
+        if not time_hierarchy[period] or not time_hierarchy[interval]:
+            print("Error: invalid period or interval parameters (out of bounds).")
+            return jsonify(success = False)
+        elif time_hierarchy[period] < time_hierarchy[interval]:
+            print("Error: interval is set larger than total period.")
+            return jsonify(success = False)
+        elif time_hierarchy[period] == 11:
+            print("Error: invalid period parameter.")
+            return jsonify(success = False)
+        elif time_hierarchy[interval] > 13:
+            print("Error: invalid interval paramter.")
+            return jsonify(success = False)
+        history = quote.history(period = period, interval = interval, actions = False)
+
+    else: 
+        start_date = data['start_date']
+        end_date = data['end_date']
+        try:
+            history = quote.history(start_date = start_date, end_date = end_date, actions = False)
+        except:
+            print("Error: invalid start date or end date format.")
+    
+    return history
