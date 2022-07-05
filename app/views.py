@@ -7,6 +7,8 @@ import json
 import yfinance as yf
 import pandas as pd
 import ta
+import numpy as np
+import pandas as pd
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
 
@@ -43,8 +45,14 @@ def quote():
         else:
             entry.ticker = ticker
         db.session.commit()
+    
+    resp = get_history(json.loads(data))
+    resp["UnixIdx"] = resp.index.astype(np.int64)
+    resp.reset_index()
+    resp = resp.set_index(resp["UnixIdx"])
+    print(resp.info())
 
-    return jsonify(success = True)
+    return jsonify(resp.to_dict())
 
 # Valid periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
 # Valid intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
