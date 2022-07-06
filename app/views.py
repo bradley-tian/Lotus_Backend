@@ -50,7 +50,6 @@ def quote():
     resp["UnixIdx"] = resp.index.astype(np.int64)
     resp.reset_index()
     resp = resp.set_index(resp["UnixIdx"])
-    print(resp.info())
 
     return jsonify(resp.to_dict())
 
@@ -115,14 +114,20 @@ def macdModel():
         starting_price = int(data['starting_price']),
         cash = int(data['cash']),
         )
+    
+    formatted_trig = {}
+    for key in triggers:
+        if type(key) != float:
+            formatted_trig[int(key.timestamp())] = triggers[key]
 
     response = {
         "macd_line": str(line.to_dict()),
         "macd_hist": str(hist.to_dict()),
         "macd_signal": str(signal.to_dict()),
-        "triggers": str(triggers),
+        "triggers": formatted_trig,
         "returns": str(net_returns),
     }
+    
     return response
 
 @app.route('/rsiModel', methods = ['GET', 'POST'])
