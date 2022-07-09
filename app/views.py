@@ -161,9 +161,14 @@ def rsiModel():
         cash = int(data['cash']),
     )
 
+    formatted_trig = {}
+    for key in triggers:
+        if type(key) != float:
+            formatted_trig[int(key.timestamp())] = triggers[key]
+
     response = {
         "rsi": str(rsi.to_dict()),
-        "triggers": str(triggers),
+        "triggers": formatted_trig,
         "returns": str(net_returns),
     }
     
