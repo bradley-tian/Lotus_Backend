@@ -13,7 +13,7 @@ import pandas as pd
 """Displays the landing/documentation page."""
 @blueprint.route('/', methods = ['GET', 'POST'])
 def index():
-    return render_template("index.html", url_for=url_for)
+    return render_template("index.html")
 
 """Generates historical price data of the given stock."""
 @blueprint.route('/api/quote', methods = ['GET','POST'])

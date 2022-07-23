@@ -9,7 +9,6 @@ def register_blueprints(app):
     module = import_module("app.base.views".format('base'))
     app.register_blueprint(module.blueprint)
 
-
 def configure_database(app):
     @app.before_first_request
     def initialize_database():
@@ -17,7 +16,7 @@ def configure_database(app):
         db.create_all(app=app)
 
 def create_app(config = None):
-    app = Flask(__name__, template_folder='templates')
+    app = Flask(__name__, template_folder = "/base/templates", static_folder = "/base/static")
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
     register_blueprints(app)
     configure_database(app)
