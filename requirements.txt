@@ -139,3 +139,4 @@ WTForms==3.0.1
 zipp==3.8.0
 eventlet==0.30.0
 yfinance
+ta
