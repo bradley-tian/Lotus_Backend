@@ -1,5 +1,6 @@
 from flask import jsonify, render_template, request
-from app import app, db
+from app import db
+from run import app
 from app.models import Quotes
 from app.algorithms import calculate_returns
 import json
@@ -11,6 +12,7 @@ import pandas as pd
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
 
+"""Displays the landing/documentation page."""
 @app.route('/', methods = ['GET', 'POST'])
 def index():
     return render_template("index.html")
