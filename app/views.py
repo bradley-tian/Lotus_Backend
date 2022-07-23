@@ -22,7 +22,7 @@ def initialize_database():
     db.create_all(app=app)
 
 """Generates historical price data of the given stock."""
-@app.route('/quote', methods = ['GET','POST'])
+@app.route('/api/quote', methods = ['GET','POST'])
 def quote():
     if request.method == 'POST':
         data = request.get_data(as_text = True)
@@ -79,7 +79,7 @@ time_hierarchy = {
 }
 
 """Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
-@app.route('/macdModel', methods = ['GET','POST'])
+@app.route('/api/macdModel', methods = ['GET','POST'])
 def macdModel(): 
     data = json.loads(request.get_data(as_text = True))
     history = get_history(data)
@@ -130,7 +130,7 @@ def macdModel():
     
     return response
 
-@app.route('/rsiModel', methods = ['GET', 'POST'])
+@app.route('/api/rsiModel', methods = ['GET', 'POST'])
 def rsiModel():
     data = json.loads(request.get_data(as_text = True))
     history = get_history(data)
