@@ -1,4 +1,3 @@
-import dataclasses
 from flask import jsonify, render_template, request
 from app import app, db
 from app.models import Quotes
@@ -12,7 +11,7 @@ import pandas as pd
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
 
-@app.route('/')
+@app.route('/', methods = ['GET', 'POST'])
 def index():
     return render_template("index.html")
 
