@@ -1,8 +1,8 @@
 from flask import jsonify, render_template, request
 from app import db
-from run import app
-from app.models import Quotes
-from app.algorithms import calculate_returns
+from app.base import blueprint
+from app.base.models import Quotes
+from app.base.algorithms import calculate_returns
 import json
 import yfinance as yf
 import pandas as pd
@@ -10,20 +10,13 @@ import ta
 import numpy as np
 import pandas as pd
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
-
 """Displays the landing/documentation page."""
-@app.route('/', methods = ['GET', 'POST'])
+@blueprint.route('/', methods = ['GET', 'POST'])
 def index():
     return render_template("index.html")
 
-@app.before_first_request
-def initialize_database():
-    db.init_app(app=app)
-    db.create_all(app=app)
-
 """Generates historical price data of the given stock."""
-@app.route('/api/quote', methods = ['GET','POST'])
+@blueprint.route('/api/quote', methods = ['GET','POST'])
 def quote():
     if request.method == 'POST':
         data = request.get_data(as_text = True)
@@ -80,7 +73,7 @@ time_hierarchy = {
 }
 
 """Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
-@app.route('/api/macdModel', methods = ['GET','POST'])
+@blueprint.route('/api/macdModel', methods = ['GET','POST'])
 def macdModel(): 
     data = json.loads(request.get_data(as_text = True))
     history = get_history(data)
@@ -131,7 +124,7 @@ def macdModel():
     
     return response
 
-@app.route('/api/rsiModel', methods = ['GET', 'POST'])
+@blueprint.route('/api/rsiModel', methods = ['GET', 'POST'])
 def rsiModel():
     data = json.loads(request.get_data(as_text = True))
     history = get_history(data)
