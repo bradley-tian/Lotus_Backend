@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template, request, url_for
 from app import db
 from app.base import blueprint
 from app.base.models import Quotes
@@ -13,7 +13,7 @@ import pandas as pd
 """Displays the landing/documentation page."""
 @blueprint.route('/', methods = ['GET', 'POST'])
 def index():
-    return render_template("index.html")
+    return render_template("index.html", url_for=url_for)
 
 """Generates historical price data of the given stock."""
 @blueprint.route('/api/quote', methods = ['GET','POST'])
