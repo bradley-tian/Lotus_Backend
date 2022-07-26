@@ -168,9 +168,12 @@ def rsiModel():
     
     return response
 
-def get_history(data):
+def get_history(data, internal = False):
     # Need to change this hardcoded username later
-    quote = yf.Ticker(Quotes.query.filter_by(username="admin").first().ticker)
+    if not internal:
+        quote = yf.Ticker(data['ticker'])
+    else: 
+        quote = yf.Ticker(Quotes.query.filter_by(username="admin").first().ticker)
     history = []
     period = data["period"]
 

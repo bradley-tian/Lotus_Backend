@@ -218,11 +218,31 @@ of Simple CSS Waves-->
                 <th>Name</th>
                 <th>Type</th>
                 <th>Description</th>
+                <th>Examples</th>
             </tr>
             <tr>
                 <td>ticker</td>
                 <td>String</td>
                 <td>The ticker of the stock to retrieve closing quotes from.</td>
+                <td>TSLA, AMD, RBLX, BAC, SPY</td>
+            </tr>
+            <tr>
+                <td>start_date</td>
+                <td>String</td>
+                <td>The start date of the historical period to conduct backtests on.</td>
+                <td>01-01-2022, 12-30-2005</td>
+            </tr>
+            <tr>
+                <td>end_date</td>
+                <td>String</td>
+                <td>The end date of the historical period to conduct backtests on.</td>
+                <td>01-01-2022, 12-30-2005</td>
+            </tr>
+            <tr>
+                <td>period (Optional)</td>
+                <td>String</td>
+                <td>The period to date to conduct backtests on. Can substitute for start & end dates.</td>
+                <td>1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max</td>
             </tr>
         </table>
         <div class="end"></div>
