@@ -137,14 +137,16 @@ def rsiModel():
 
     triggers = {}
     last_value = None
+    lower = int(data['lower'])
+    higher = int(data['higher'])
 
     # Change timestamps to epoch times
     for date, value in rsi.items():
         if last_value:
             # Make customizable
-            if last_value < 30 and value > 30:
+            if last_value < lower and value > lower:
                 triggers[date] = [closings[date], 'buy']
-            elif last_value < 70 and value > 70:
+            elif last_value < higher and value > higher:
                 triggers[date] = [closings[date], 'sell']
         last_value = value
 
