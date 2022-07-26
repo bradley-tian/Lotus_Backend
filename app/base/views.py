@@ -18,9 +18,12 @@ def index():
 """Generates historical price data of the given stock."""
 @blueprint.route('/api/quote', methods = ['GET','POST'])
 def quote():
+    data = request.get_data()
+    data = json.loads(data)
+    print("type: " + str(type(data)))
+
     if request.method == 'POST':
-        data = request.get_data(as_text = True)
-        ticker = (json.loads(data))["ticker"]
+        ticker = data["ticker"]
         try:
             yf.Ticker(ticker)
         except:
@@ -40,7 +43,7 @@ def quote():
             entry.ticker = ticker
         db.session.commit()
     
-    resp = get_history(json.loads(data))
+    resp = get_history(data)
     resp["UnixIdx"] = resp.index.astype(np.int64)
     resp.reset_index()
     resp = resp.set_index(resp["UnixIdx"])
@@ -75,7 +78,7 @@ time_hierarchy = {
 """Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
 @blueprint.route('/api/macdModel', methods = ['GET','POST'])
 def macdModel(): 
-    data = json.loads(request.get_data(as_text = True))
+    data = json.loads(request.get_data())
     history = get_history(data)
     closings = history['Close']
     macd = ta.trend.MACD(
