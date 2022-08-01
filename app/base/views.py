@@ -149,7 +149,7 @@ def rsiModel():
             # Make customizable
             if last_value < lower and value > lower:
                 triggers[date] = [closings[date], 'buy']
-            elif last_value < higher and value > higher:
+            elif last_value > higher and value < higher:
                 triggers[date] = [closings[date], 'sell']
         last_value = value
 
@@ -172,6 +172,8 @@ def rsiModel():
     }
     
     return response
+
+
 
 def get_history(data, internal = False):
     # Need to change this hardcoded username later
