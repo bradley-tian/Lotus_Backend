@@ -2,6 +2,7 @@
 from flask import Flask
 from importlib import import_module
 from flask_sqlalchemy import SQLAlchemy as SQL
+from flask_cors import CORS
 
 db = SQL()
 
@@ -20,4 +21,5 @@ def create_app(config = None):
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///db.sqlite3"
     register_blueprints(app)
     configure_database(app)
+    cors = CORS(app)
     return app
