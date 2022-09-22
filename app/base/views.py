@@ -5,7 +5,6 @@ from app.base.models import Quotes
 from app.base.algorithms import calculate_returns
 import json
 import yfinance as yf
-import pandas as pd
 import ta
 import numpy as np
 import pandas as pd
@@ -76,7 +75,7 @@ time_hierarchy = {
 }
 
 """Generates MACD two-line, historgram, and signal line values, calculating buy and sell points using crossovers."""
-@blueprint.route('/api/macdModel', methods = ['GET','POST'])
+@blueprint.route('/api/macdModel', methods = ['GET'])
 def macdModel(): 
     data = json.loads(request.get_data())
     history = get_history(data)
@@ -127,7 +126,7 @@ def macdModel():
     
     return response
 
-@blueprint.route('/api/rsiModel', methods = ['GET', 'POST'])
+@blueprint.route('/api/rsiModel', methods = ['GET'])
 def rsiModel():
     data = json.loads(request.get_data(as_text = True))
     history = get_history(data)
@@ -173,7 +172,10 @@ def rsiModel():
     
     return response
 
-
+@blueprint.route('api/kdjModel', methods = ['GET', 'POST'])
+def kdjModel():
+    response = {}
+    return response
 
 def get_history(data, internal = False):
     # Need to change this hardcoded username later
@@ -210,3 +212,4 @@ def get_history(data, internal = False):
             print("Error: invalid start date or end date format.")
     
     return history
+
